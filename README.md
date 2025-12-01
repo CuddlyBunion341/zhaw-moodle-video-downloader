@@ -2,6 +2,8 @@
 
 A Firefox extension that makes it easy to download Kaltura videos from Moodle. With one click, copy an ffmpeg command to download any video.
 
+<img width="1410" height="930" alt="CleanShot 2025-12-01 at 12 34 38@2x" src="https://github.com/user-attachments/assets/1808e556-061a-47e7-a871-8ec3de455efa" />
+
 ## Features
 
 - Automatically detects Kaltura videos on Moodle pages
