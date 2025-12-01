@@ -68,7 +68,7 @@ class KalturaDownloader {
 
     const button = document.createElement('button');
     button.className = 'kaltura-download-btn';
-    button.textContent = '↓ copy';
+    button.textContent = '⎘ Copy';
     button.title = 'Copy ffmpeg command to clipboard';
 
     button.addEventListener('click', async (e) => {
@@ -83,13 +83,13 @@ class KalturaDownloader {
 
   async handleDownloadClick(button, entryId) {
     const originalText = button.textContent;
-    button.textContent = '...';
+    button.textContent = 'Loading...';
     button.disabled = true;
 
     const videoUrl = await this.getVideoUrl(entryId);
 
     if (!videoUrl) {
-      button.textContent = 'ERR: play video first';
+      button.textContent = 'Play video first';
       setTimeout(() => {
         button.textContent = originalText;
         button.disabled = false;
@@ -97,12 +97,12 @@ class KalturaDownloader {
       return;
     }
 
-    const videoName = this.generateVideoName(entryId);
+    const videoName = this.generateVideoName(videoUrl);
     const ffmpegCommand = `ffmpeg -i '${videoUrl}' -c copy ~/Downloads/${videoName}`;
 
     try {
       await navigator.clipboard.writeText(ffmpegCommand);
-      button.textContent = 'OK';
+      button.textContent = 'Copied!';
       console.log('[Kaltura Downloader] Command copied to clipboard');
 
       setTimeout(() => {
@@ -111,7 +111,7 @@ class KalturaDownloader {
       }, 2000);
     } catch (error) {
       console.error('[Kaltura Downloader] Failed to copy to clipboard:', error);
-      button.textContent = 'ERR: copy failed';
+      button.textContent = 'Copy failed';
       setTimeout(() => {
         button.textContent = originalText;
         button.disabled = false;
@@ -119,9 +119,56 @@ class KalturaDownloader {
     }
   }
 
-  generateVideoName(entryId) {
+  normalizeTitle(title) {
+    // Remove " | Moodle ZHAW" or similar suffixes
+    let normalized = title.split('|')[0].trim();
+
+    // Replace colons with hyphens
+    normalized = normalized.replace(/:/g, '-');
+
+    // Remove invalid filename characters: / \ * ? " < > |
+    normalized = normalized.replace(/[\/\\*?"<>|]/g, '');
+
+    // Replace spaces and multiple hyphens with single underscore
+    normalized = normalized.replace(/[\s-]+/g, '_');
+
+    // Remove leading/trailing underscores
+    normalized = normalized.replace(/^_+|_+$/g, '');
+
+    // Convert to lowercase
+    normalized = normalized.toLowerCase();
+
+    // Limit length (leave room for hash and .mp4 extension)
+    if (normalized.length > 80) {
+      normalized = normalized.substring(0, 80);
+    }
+
+    // If somehow we end up with empty string, use fallback
+    if (!normalized) {
+      normalized = 'video';
+    }
+
+    return normalized;
+  }
+
+  simpleHash(str) {
+    // Simple hash function to generate a short unique identifier
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    // Convert to base36 and take first 8 characters
+    return Math.abs(hash).toString(36).substring(0, 8).padStart(8, '0');
+  }
+
+  generateVideoName(videoUrl) {
+    const pageTitle = document.title;
+    const normalizedTitle = this.normalizeTitle(pageTitle);
     const date = new Date().toISOString().split('T')[0];
-    return `kaltura_${entryId}_${date}.mp4`;
+    const urlHash = this.simpleHash(videoUrl);
+    return `${normalizedTitle}_${date}_${urlHash}.mp4`;
   }
 }
 

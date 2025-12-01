@@ -5,10 +5,10 @@ A Firefox extension that makes it easy to download Kaltura videos from Moodle. W
 ## Features
 
 - Automatically detects Kaltura videos on Moodle pages
-- Adds a minimal neon green download button overlay on each video
+- Adds a clean copy button overlay on each video
 - Copies ffmpeg download command to clipboard
 - Captures video URLs from network requests
-- Minimal design with clear visual feedback
+- Simple, unobtrusive design with clear visual feedback
 
 ## Installation
 
@@ -32,18 +32,31 @@ For permanent installation, the extension needs to be signed by Mozilla:
 
 1. Navigate to a Moodle page with Kaltura videos (e.g., `moodle.zhaw.ch`)
 2. **Important:** Click play on each video and let it load for a few seconds
-3. Look for the green "↓ copy" button on the top-right of the video player
+3. Look for the "⎘ Copy" button on the top-right of the video player
 4. Click the button to copy the ffmpeg command to your clipboard
 5. Open a terminal and paste the command
 6. The video will download to `~/Downloads/`
 
 ### Example
 
-When you click the download button, you'll get a command like:
-
-```bash
-ffmpeg -i 'https://api.kaltura.switch.ch/p/111/sp/11100/playManifest/entryId/0_dwokpxlc/.../a.m3u8' -c copy ~/Downloads/kaltura_0_dwokpxlc_2024-12-01.mp4
+When you click the download button, the filename will be based on the page title. For example, if the page title is:
 ```
+STS_HS25_BL: Kapitel 6 - Methode der kleinsten Quadrate: Kapitel 6 - Teil 1 | Moodle ZHAW
+```
+
+You'll get a command like:
+```bash
+ffmpeg -i 'https://api.kaltura.switch.ch/p/111/sp/11100/playManifest/entryId/0_dwokpxlc/.../a.m3u8' -c copy ~/Downloads/sts_hs25_bl_kapitel_6_methode_der_kleinsten_quadrate_kapitel_6_teil_1_2024-12-01_a3f8c29d.mp4
+```
+
+The filename is automatically normalized and unique:
+- Removes " | Moodle ZHAW" suffix
+- Converts colons to underscores
+- Removes invalid filename characters
+- Converts spaces to underscores
+- Converts to lowercase
+- Adds current date
+- **Adds unique 8-character hash of video URL (prevents overwriting files with same title)**
 
 ## Requirements
 
@@ -87,7 +100,7 @@ All tests should pass before making changes.
 
 ## Troubleshooting
 
-**Button shows "ERR: play video first"**
+**Button shows "Play video first"**
 - The video URL is captured when the video starts playing
 - Click play on the video and wait 3-5 seconds for it to load
 - Open the browser console (F12) and check for "[Kaltura Downloader] Captured video URL" messages
@@ -114,10 +127,11 @@ All tests should pass before making changes.
 
 ## Notes
 
+- Filenames are guaranteed unique (using URL hash) - no accidental overwrites
 - Video URLs may expire after some time
 - Some videos might be DRM-protected and won't download
 - Large videos may take a while to download
-- The extension only works on domains specified in manifest.json
+- The extension works on all Moodle domains
 
 ## License
 

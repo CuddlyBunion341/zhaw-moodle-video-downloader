@@ -4,8 +4,8 @@ You can create icons using any image editor. Recommended sizes:
 - icon-48.png: 48x48 pixels
 - icon-96.png: 96x96 pixels
 
-Suggested design: A neon green (#00ff00) background with a black download arrow or video icon.
-Keep it minimal - solid color, simple icon.
+Suggested design: A simple, clean icon with a clipboard or video symbol.
+Keep it minimal and professional.
 
 Online tools to create icons:
 - https://favicon.io/

@@ -79,16 +79,127 @@ async function testEntryIdExtraction() {
   });
 }
 
-// Test: Video name generation
-async function testVideoNameGeneration() {
-  const generateVideoName = (entryId) => {
-    const date = new Date().toISOString().split('T')[0];
-    return `kaltura_${entryId}_${date}.mp4`;
+// Test: Title normalization
+async function testTitleNormalization() {
+  const normalizeTitle = (title) => {
+    let normalized = title.split('|')[0].trim();
+    normalized = normalized.replace(/:/g, '-');
+    normalized = normalized.replace(/[\/\\*?"<>|]/g, '');
+    normalized = normalized.replace(/[\s-]+/g, '_');
+    normalized = normalized.replace(/^_+|_+$/g, '');
+    normalized = normalized.toLowerCase();
+    if (normalized.length > 100) {
+      normalized = normalized.substring(0, 100);
+    }
+    if (!normalized) {
+      normalized = 'video';
+    }
+    return normalized;
   };
 
-  const name = generateVideoName('0_dwokpxlc');
-  const datePattern = /kaltura_0_dwokpxlc_\d{4}-\d{2}-\d{2}\.mp4/;
+  const testCases = [
+    {
+      input: 'STS_HS25_BL: Kapitel 6 - Methode der kleinsten Quadrate: Kapitel 6 - Teil 1 | Moodle ZHAW',
+      expected: 'sts_hs25_bl_kapitel_6_methode_der_kleinsten_quadrate_kapitel_6_teil_1'
+    },
+    {
+      input: 'Simple Title',
+      expected: 'simple_title'
+    },
+    {
+      input: 'Title/With\\Invalid*Chars?',
+      expected: 'titlewithinvalidchars'
+    },
+    {
+      input: '   Spaces   Everywhere   ',
+      expected: 'spaces_everywhere'
+    },
+    {
+      input: 'Multiple---Dashes',
+      expected: 'multiple_dashes'
+    }
+  ];
+
+  testCases.forEach(({ input, expected }) => {
+    const result = normalizeTitle(input);
+    assert.strictEqual(result, expected, `"${input}" should normalize to "${expected}", got "${result}"`);
+  });
+}
+
+// Test: Hash generation
+async function testHashGeneration() {
+  const simpleHash = (str) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(36).substring(0, 8).padStart(8, '0');
+  };
+
+  const url1 = 'https://api.kaltura.switch.ch/video1.m3u8';
+  const url2 = 'https://api.kaltura.switch.ch/video2.m3u8';
+
+  const hash1 = simpleHash(url1);
+  const hash2 = simpleHash(url2);
+
+  assert.strictEqual(hash1.length, 8, 'Hash should be 8 characters long');
+  assert.strictEqual(hash2.length, 8, 'Hash should be 8 characters long');
+  assert.notStrictEqual(hash1, hash2, 'Different URLs should produce different hashes');
+
+  // Same URL should produce same hash
+  const hash1Again = simpleHash(url1);
+  assert.strictEqual(hash1, hash1Again, 'Same URL should produce same hash');
+}
+
+// Test: Video name generation
+async function testVideoNameGeneration() {
+  global.document = { title: 'Test Video: Part 1 | Moodle ZHAW' };
+
+  const normalizeTitle = (title) => {
+    let normalized = title.split('|')[0].trim();
+    normalized = normalized.replace(/:/g, '-');
+    normalized = normalized.replace(/[\/\\*?"<>|]/g, '');
+    normalized = normalized.replace(/[\s-]+/g, '_');
+    normalized = normalized.replace(/^_+|_+$/g, '');
+    normalized = normalized.toLowerCase();
+    if (normalized.length > 80) {
+      normalized = normalized.substring(0, 80);
+    }
+    if (!normalized) {
+      normalized = 'video';
+    }
+    return normalized;
+  };
+
+  const simpleHash = (str) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(36).substring(0, 8).padStart(8, '0');
+  };
+
+  const generateVideoName = (videoUrl) => {
+    const pageTitle = global.document.title;
+    const normalizedTitle = normalizeTitle(pageTitle);
+    const date = new Date().toISOString().split('T')[0];
+    const urlHash = simpleHash(videoUrl);
+    return `${normalizedTitle}_${date}_${urlHash}.mp4`;
+  };
+
+  const testUrl = 'https://api.kaltura.switch.ch/test.m3u8';
+  const name = generateVideoName(testUrl);
+  const datePattern = /test_video_part_1_\d{4}-\d{2}-\d{2}_[a-z0-9]{8}\.mp4/;
   assert.match(name, datePattern, `Video name should match pattern: ${name}`);
+
+  // Test uniqueness - same title but different URL should produce different filename
+  const testUrl2 = 'https://api.kaltura.switch.ch/test2.m3u8';
+  const name2 = generateVideoName(testUrl2);
+  assert.notStrictEqual(name, name2, 'Different URLs should produce different filenames');
 }
 
 // Test: ffmpeg command generation
@@ -149,7 +260,9 @@ async function main() {
   console.log('Running Kaltura Downloader Tests\n');
 
   await suite.run('Extract entry ID from URL', testEntryIdExtraction);
-  await suite.run('Generate video name with date', testVideoNameGeneration);
+  await suite.run('Normalize title to filename', testTitleNormalization);
+  await suite.run('Generate hash from URL', testHashGeneration);
+  await suite.run('Generate video name with date and hash', testVideoNameGeneration);
   await suite.run('Generate ffmpeg command', testFfmpegCommandGeneration);
   await suite.run('Write to clipboard', testClipboardWrite);
   await suite.run('Handle background message for known entry', testBackgroundMessageHandling);
