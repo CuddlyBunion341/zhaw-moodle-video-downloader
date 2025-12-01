@@ -34,7 +34,7 @@ For permanent installation, the extension needs to be signed by Mozilla:
 
 1. Navigate to a Moodle page with Kaltura videos (e.g., `moodle.zhaw.ch`)
 2. **Important:** Click play on each video and let it load for a few seconds
-3. Look for the "⎘ Copy" button on the top-right of the video player
+3. Look for the "Copy ffmpeg command" button on the top-right of the video player
 4. Click the button to copy the ffmpeg command to your clipboard
 5. Open a terminal and paste the command
 6. The video will download to `~/Downloads/`
@@ -96,7 +96,6 @@ All tests should pass before making changes.
 ├── content.css         # Styles for download button
 ├── test/
 │   └── content.test.js # Test suite
-├── icons/              # Extension icons (add your own)
 └── README.md           # This file
 ```
 

@@ -68,7 +68,7 @@ class KalturaDownloader {
 
     const button = document.createElement('button');
     button.className = 'kaltura-download-btn';
-    button.textContent = '⎘ Copy';
+    button.textContent = 'Copy ffmpeg command';
     button.title = 'Copy ffmpeg command to clipboard';
 
     button.addEventListener('click', async (e) => {
