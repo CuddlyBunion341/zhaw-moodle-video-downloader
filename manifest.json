@@ -1,0 +1,29 @@
+{
+  "manifest_version": 2,
+  "name": "Moodle Kaltura Video Downloader",
+  "version": "1.0.0",
+  "description": "Download Kaltura videos from Moodle with a single click - generates ffmpeg commands",
+  "icons": {
+    "48": "icons/icon-48.png",
+    "96": "icons/icon-96.png"
+  },
+  "permissions": [
+    "clipboardWrite",
+    "webRequest",
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://moodle.zhaw.ch/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_end"
+    }
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "web_accessible_resources": [
+    "icons/*.png"
+  ]
+}

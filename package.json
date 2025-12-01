@@ -1,0 +1,11 @@
+{
+  "name": "moodle-kaltura-downloader",
+  "version": "1.0.0",
+  "description": "Firefox extension to download Kaltura videos from Moodle",
+  "scripts": {
+    "test": "node test/content.test.js"
+  },
+  "keywords": ["firefox", "extension", "moodle", "kaltura", "video", "downloader"],
+  "author": "",
+  "license": "MIT"
+}
